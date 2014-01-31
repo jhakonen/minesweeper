@@ -1,4 +1,4 @@
-from usecases.createnewgame import CreateNewGameUseCase
+from minesweeper.usecases.createnewgame import CreateNewGameUseCase
 from nose.tools import with_setup
 import mock
 
