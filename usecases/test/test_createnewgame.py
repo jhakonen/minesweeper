@@ -16,14 +16,15 @@ class TestCreateNewGame(object):
 		self.uc.create_new_game()
 		self.sink.board_size_changed.called
 
-	def test_easy_difficulty_changes_board_size_to_9x9(self):
-		self.uc.create_new_game(difficulty=Difficulty.EASY)
-		self.sink.board_size_changed.assert_called_once_with(9, 9)
+	def test_difficulty_change_changes_board_size(self):
+		data = (
+			(Difficulty.EASY, 9, 9),
+			(Difficulty.MEDIUM, 16, 16),
+			(Difficulty.HARD, 16, 30)
+		)
+		for level, width, height in data:
+			yield self.check_difficulty, level, width, height
 
-	def test_medium_difficulty_changes_board_size_to_16x16(self):
-		self.uc.create_new_game(difficulty=Difficulty.MEDIUM)
-		self.sink.board_size_changed.assert_called_once_with(16, 16)
-
-	def test_hard_difficulty_changes_board_size_to_16x30(self):
-		self.uc.create_new_game(difficulty=Difficulty.HARD)
-		self.sink.board_size_changed.assert_called_once_with(16, 30)
+	def check_difficulty(self, level, width, height):
+		self.uc.create_new_game(difficulty=level)
+		self.sink.board_size_changed.assert_called_once_with(width, height)
