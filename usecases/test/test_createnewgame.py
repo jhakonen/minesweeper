@@ -5,8 +5,10 @@ import mock
 
 class TestCreateNewGame(object):
 	def setUp(self):
+		self.game = mock.Mock()
+		self.game.timer = mock.Mock()
 		self.sink = mock.Mock()
-		self.uc = CreateNewGameUseCase(self.sink)
+		self.uc = CreateNewGameUseCase(self.game, self.sink)
 
 	def test_create_new_game_calls_game_created(self):
 		self.uc.create_new_game()
@@ -28,3 +30,11 @@ class TestCreateNewGame(object):
 	def check_difficulty(self, level, width, height):
 		self.uc.create_new_game(difficulty=level)
 		self.sink.board_size_changed.assert_called_once_with(width, height)
+
+	def test_creating_game_resets_timer(self):
+		self.uc.create_new_game()
+		assert self.game.timer.reset.called
+
+	def test_creating_game_starts_timer(self):
+		self.uc.create_new_game()
+		assert self.game.timer.start.called
