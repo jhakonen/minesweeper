@@ -1,10 +1,11 @@
 from minesweeper.definitions import Difficulty
+from minesweeper.utils import CallableWrapper
 
 class CreateNewGameUseCase(object):
 
 	def __init__(self, game, sink):
 		self.game = game
-		self.sink = sink
+		self.sink = CallableWrapper(sink)
 		# mapping of difficulty to game board's size
 		self.dif_size_dict = {
 			Difficulty.EASY: (9, 9),

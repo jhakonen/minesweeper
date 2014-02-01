@@ -38,3 +38,13 @@ class TestCreateNewGame(object):
 	def test_creating_game_starts_timer(self):
 		self.uc.create_new_game()
 		assert self.game.timer.start.called
+
+	def test_two_sinks_are_called_on_create_game(self):
+		sink1 = mock.Mock()
+		sink2 = mock.Mock()
+		self.uc = CreateNewGameUseCase(self.game, [sink1, sink2])
+		self.uc.create_new_game()
+		assert sink1.game_created.called
+		assert sink2.game_created.called
+		assert sink1.board_size_changed.called
+		assert sink2.board_size_changed.called
