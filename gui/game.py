@@ -1,6 +1,8 @@
 import sys
 import pygame
 from pygame import Rect
+from boardview import BoardView
+from tile import TileRenderer
 
 
 def draw_background(screen, tile_img_file, field_rect):
@@ -37,6 +39,11 @@ def run_game():
                 (SCREEN_WIDTH, SCREEN_HEIGHT), 0, 32)
     clock = pygame.time.Clock()
 
+    boardview = BoardView(TileRenderer())
+    boardview.set_geometry(Rect(50, 50, 300, 300))
+    boardview.set_rows(16)
+    boardview.set_cols(16)
+
     while True:
         time_passed = clock.tick(30)
 
@@ -45,6 +52,7 @@ def run_game():
                 exit_game()
 
         draw_background(screen, BG_TILE_IMG, FIELD_RECT)
+        boardview.paint(screen)
         pygame.display.flip()
 
 
