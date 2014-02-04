@@ -1,6 +1,5 @@
 from minesweeper.usecases.createnewgame import CreateNewGameUseCase
 from minesweeper.definitions import Difficulty
-from nose.tools import with_setup
 import mock
 
 class TestCreateNewGame(object):
