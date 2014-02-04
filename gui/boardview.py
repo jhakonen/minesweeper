@@ -38,6 +38,6 @@ class BoardView(object):
 			x = self.left + col * self.tile_size
 			for row in range(0, self.rows):
 				y = self.top + row * self.tile_size
-				self.tile_renderer.set_geometry(Rect(x, y, self.tile_size, self.tile_size))
+				self.tile_renderer.geometry = Rect(x, y, self.tile_size, self.tile_size)
 				self.tile_renderer.paint(screen)
 
