@@ -40,9 +40,9 @@ def run_game():
     clock = pygame.time.Clock()
 
     boardview = BoardView(TileRenderer())
-    boardview.set_geometry(Rect(50, 50, 300, 300))
-    boardview.set_rows(16)
-    boardview.set_cols(16)
+    boardview.geometry = Rect(50, 50, 300, 300)
+    boardview.rows = 16
+    boardview.cols = 16
 
     while True:
         time_passed = clock.tick(30)
@@ -61,4 +61,3 @@ def exit_game():
 
 
 run_game()
-

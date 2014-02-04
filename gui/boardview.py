@@ -3,24 +3,19 @@ from pygame import Rect
 
 class BoardView(object):
 
+	geometry = Rect(0, 0, 1, 1)
+	rows = 1
+	cols = 1
+	tile_renderer = None
+
 	def __init__(self, tile_renderer):
-		self.geometry = Rect(0, 0, 1, 1)
-		self.rows = 1
-		self.cols = 1
 		self.tile_renderer = tile_renderer
 		self.calc_contents()
-	
-	def set_geometry(self, rect):
-		self.geometry = rect
-		self.calc_contents()
 
-	def set_rows(self, rows):
-		self.rows = rows
-		self.calc_contents()
-
-	def set_cols(self, cols):
-		self.cols = cols
-		self.calc_contents()
+	def __setattr__(self, name, value):
+		super(BoardView, self).__setattr__(name, value)
+		if name is "geometry" or name is "cols" or name is "rows":
+			self.calc_contents()
 
 	def calc_contents(self):
 		self.calc_tile_size()
@@ -40,4 +35,3 @@ class BoardView(object):
 				y = self.top + row * self.tile_size
 				self.tile_renderer.geometry = Rect(x, y, self.tile_size, self.tile_size)
 				self.tile_renderer.paint(screen)
-
