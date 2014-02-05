@@ -4,6 +4,7 @@ from pygame import Rect
 from boardview import BoardView
 from tile import TileRenderer
 
+event_listeners = []
 
 def draw_background(screen, tile_img_file, field_rect):
     tile_img = pygame.image.load(tile_img_file).convert_alpha()
@@ -33,7 +34,6 @@ def run_game():
     FIELD_RECT = Rect(50, 50, 300, 300)
     BG_TILE_IMG = 'images/brick_tile.png'
 
-
     pygame.init()
     screen = pygame.display.set_mode(
                 (SCREEN_WIDTH, SCREEN_HEIGHT), 0, 32)
@@ -44,12 +44,20 @@ def run_game():
     boardview.rows = 16
     boardview.cols = 16
 
+    event_listeners.append(boardview)
+
     while True:
         time_passed = clock.tick(30)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 exit_game()
+            elif event.type is pygame.MOUSEMOTION:
+                call_event_listeners('mouse_move_event')
+            elif event.type is pygame.MOUSEBUTTONDOWN:
+                call_event_listeners('mouse_button_down_event')
+            elif event.type is pygame.MOUSEBUTTONUP:
+                call_event_listeners('mouse_button_up_event')
 
         draw_background(screen, BG_TILE_IMG, FIELD_RECT)
         boardview.paint(screen)
@@ -59,5 +67,9 @@ def run_game():
 def exit_game():
     sys.exit()
 
+def call_event_listeners(methodname, *args, **kwargs):
+    for l in event_listeners:
+        if hasattr(l, methodname):
+            getattr(l, methodname)(*args, **kwargs)
 
 run_game()
