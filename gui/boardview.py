@@ -1,6 +1,7 @@
 
 import pygame
 from pygame import Rect
+from definitions import MouseButton
 
 class BoardView(object):
 
@@ -8,7 +9,8 @@ class BoardView(object):
 	rows = 1
 	cols = 1
 	tile_renderer = None
-	pressed_tile = None
+	pressed_tile_left = None
+	pressed_tile_right = None
 
 	def __init__(self, tile_renderer):
 		self.tile_renderer = tile_renderer
@@ -40,16 +42,25 @@ class BoardView(object):
 				rect = Rect(x, y, self.tile_size, self.tile_size)
 				self.tile_renderer.geometry = rect
 				mouseover = mouse_over_tile and mouse_over_tile == (col, row)
-				pressed = self.pressed_tile and self.pressed_tile == (col, row)
+				pressed = self.pressed_tile_left and self.pressed_tile_left == (col, row)
 				self.tile_renderer.paint(screen=screen, mouseover=mouseover, pressed=pressed)
 
-	def mouse_button_down_event(self):
-		self.pressed_tile = self.get_tile_at_pos(pygame.mouse.get_pos())
+	def mouse_button_down_event(self, button):
+		if button == MouseButton.LEFT:
+			self.pressed_tile_left = self.get_tile_at_pos(pygame.mouse.get_pos())
+		elif button == MouseButton.RIGHT:
+			self.pressed_tile_right = self.get_tile_at_pos(pygame.mouse.get_pos())
 
-	def mouse_button_up_event(self):
-		if self.pressed_tile and self.pressed_tile == self.get_tile_at_pos(pygame.mouse.get_pos()):
-			print "tile clicked at:", self.pressed_tile
-		self.pressed_tile = None
+	def mouse_button_up_event(self, button):
+		pos = self.get_tile_at_pos(pygame.mouse.get_pos())
+		if button == MouseButton.LEFT:
+			if self.pressed_tile_left and self.pressed_tile_left == pos:
+				print "tile left clicked at:", self.pressed_tile_left
+			self.pressed_tile_left = None
+		elif button == MouseButton.RIGHT:
+			if self.pressed_tile_right and self.pressed_tile_right == pos:
+				print "tile right clicked at:", self.pressed_tile_right
+			self.pressed_tile_right = None
 
 	def get_tile_at_pos(self, pos):
 		x = (pos[0] - self.left) / self.tile_size

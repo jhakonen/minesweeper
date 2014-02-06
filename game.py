@@ -1,8 +1,8 @@
 import sys
 import pygame
 from pygame import Rect
-from boardview import BoardView
-from tile import TileRenderer
+from gui.boardview import BoardView
+from gui.tile import TileRenderer
 
 event_listeners = []
 
@@ -32,7 +32,7 @@ def run_game():
     # Game parameters
     SCREEN_WIDTH, SCREEN_HEIGHT = 400, 400
     FIELD_RECT = Rect(50, 50, 300, 300)
-    BG_TILE_IMG = 'images/brick_tile.png'
+    BG_TILE_IMG = 'gui/images/brick_tile.png'
 
     pygame.init()
     screen = pygame.display.set_mode(
@@ -55,9 +55,9 @@ def run_game():
             elif event.type is pygame.MOUSEMOTION:
                 call_event_listeners('mouse_move_event')
             elif event.type is pygame.MOUSEBUTTONDOWN:
-                call_event_listeners('mouse_button_down_event')
+                call_event_listeners('mouse_button_down_event', button=event.button)
             elif event.type is pygame.MOUSEBUTTONUP:
-                call_event_listeners('mouse_button_up_event')
+                call_event_listeners('mouse_button_up_event', button=event.button)
 
         draw_background(screen, BG_TILE_IMG, FIELD_RECT)
         boardview.paint(screen)
