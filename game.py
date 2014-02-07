@@ -3,8 +3,9 @@ import pygame
 from pygame import Rect
 from gui.boardview import BoardView
 from gui.tile import TileRenderer
+from utils import CallableWrapper
 
-event_listeners = []
+event_listeners = CallableWrapper()
 
 def draw_background(screen, tile_img_file, field_rect):
     tile_img = pygame.image.load(tile_img_file).convert_alpha()
@@ -53,11 +54,11 @@ def run_game():
             if event.type == pygame.QUIT:
                 exit_game()
             elif event.type is pygame.MOUSEMOTION:
-                call_event_listeners('mouse_move_event')
+                event_listeners.mouse_move_event()
             elif event.type is pygame.MOUSEBUTTONDOWN:
-                call_event_listeners('mouse_button_down_event', button=event.button)
+                event_listeners.mouse_button_down_event(button=event.button)
             elif event.type is pygame.MOUSEBUTTONUP:
-                call_event_listeners('mouse_button_up_event', button=event.button)
+                event_listeners.mouse_button_up_event(button=event.button)
 
         draw_background(screen, BG_TILE_IMG, FIELD_RECT)
         boardview.paint(screen)
@@ -66,10 +67,5 @@ def run_game():
 
 def exit_game():
     sys.exit()
-
-def call_event_listeners(methodname, *args, **kwargs):
-    for l in event_listeners:
-        if hasattr(l, methodname):
-            getattr(l, methodname)(*args, **kwargs)
 
 run_game()
