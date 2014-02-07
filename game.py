@@ -6,27 +6,33 @@ from gui.tile import TileRenderer
 from utils import CallableWrapper
 
 event_listeners = CallableWrapper()
+paintables = CallableWrapper()
 
-def draw_background(screen, tile_img_file, field_rect):
-    tile_img = pygame.image.load(tile_img_file).convert_alpha()
-    img_rect = tile_img.get_rect()
+class Background(object):
+    def __init__(self, tile_img_file, field_rect):
+        self.tile_img_file = tile_img_file
+        self.field_rect = field_rect
 
-    nrows = int(screen.get_height() / img_rect.height) + 1
-    ncols = int(screen.get_width() / img_rect.width) + 1
+    def paint(self, screen):
+        tile_img = pygame.image.load(self.tile_img_file).convert_alpha()
+        img_rect = tile_img.get_rect()
 
-    for y in range(nrows):
-        for x in range(ncols):
-            img_rect.topleft = (x * img_rect.width,
-                                y * img_rect.height)
-            screen.blit(tile_img, img_rect)
+        nrows = int(screen.get_height() / img_rect.height) + 1
+        ncols = int(screen.get_width() / img_rect.width) + 1
 
-    field_color = (109, 41, 1)
-    boundary_rect = Rect(   field_rect.left - 4,
-                            field_rect.top - 4,
-                            field_rect.width + 8,
-                            field_rect.height + 8)
-    pygame.draw.rect(screen, (0, 0, 0), boundary_rect)
-    pygame.draw.rect(screen, field_color, field_rect)
+        for y in range(nrows):
+            for x in range(ncols):
+                img_rect.topleft = (x * img_rect.width,
+                                    y * img_rect.height)
+                screen.blit(tile_img, img_rect)
+
+        field_color = (109, 41, 1)
+        boundary_rect = Rect(   self.field_rect.left - 4,
+                                self.field_rect.top - 4,
+                                self.field_rect.width + 8,
+                                self.field_rect.height + 8)
+        pygame.draw.rect(screen, (0, 0, 0), boundary_rect)
+        pygame.draw.rect(screen, field_color, self.field_rect)
 
 
 def run_game():
@@ -40,12 +46,16 @@ def run_game():
                 (SCREEN_WIDTH, SCREEN_HEIGHT), 0, 32)
     clock = pygame.time.Clock()
 
+    bg = Background(BG_TILE_IMG, FIELD_RECT)
+
     boardview = BoardView(TileRenderer())
     boardview.geometry = Rect(50, 50, 300, 300)
     boardview.rows = 16
     boardview.cols = 16
 
     event_listeners.append(boardview)
+    paintables.append(bg)
+    paintables.append(boardview)
 
     while True:
         time_passed = clock.tick(30)
@@ -60,10 +70,8 @@ def run_game():
             elif event.type is pygame.MOUSEBUTTONUP:
                 event_listeners.mouse_button_up_event(button=event.button)
 
-        draw_background(screen, BG_TILE_IMG, FIELD_RECT)
-        boardview.paint(screen)
+        paintables.paint(screen)
         pygame.display.flip()
-
 
 def exit_game():
     sys.exit()
