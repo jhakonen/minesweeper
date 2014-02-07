@@ -3,6 +3,7 @@ import pygame
 from pygame import Rect
 from gui.boardview import BoardView
 from gui.tile import TileRenderer
+from gui.meterview import MeterView
 from utils import CallableWrapper
 
 event_listeners = CallableWrapper()
@@ -40,6 +41,9 @@ def run_game():
     SCREEN_WIDTH, SCREEN_HEIGHT = 400, 400
     FIELD_RECT = Rect(50, 50, 300, 300)
     BG_TILE_IMG = 'gui/images/brick_tile.png'
+    METER_WIDTH = 100
+    METER_HEIGHT = 30
+    METER_BOARD_MARGIN = 10
 
     pygame.init()
     screen = pygame.display.set_mode(
@@ -53,9 +57,17 @@ def run_game():
     boardview.rows = 16
     boardview.cols = 16
 
+    time_counter = MeterView("Time")
+    time_counter.geometry = Rect(boardview.geometry.left, boardview.geometry.bottom + METER_BOARD_MARGIN, METER_WIDTH, METER_HEIGHT)
+
+    mine_counter = MeterView("Mines")
+    mine_counter.geometry = Rect(boardview.geometry.right - METER_WIDTH, boardview.geometry.bottom + METER_BOARD_MARGIN, METER_WIDTH, METER_HEIGHT)
+
     event_listeners.append(boardview)
     paintables.append(bg)
     paintables.append(boardview)
+    paintables.append(time_counter)
+    paintables.append(mine_counter)
 
     while True:
         time_passed = clock.tick(30)
