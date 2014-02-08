@@ -4,9 +4,6 @@ from pygame import Rect
 from gui.boardview import BoardView
 from gui.tile import TileRenderer
 from gui.meterview import MeterView
-from utils import CallableWrapper
-
-event_listeners = CallableWrapper()
 
 class Background(object):
     def __init__(self, tile_img_file, field_rect):
@@ -75,8 +72,6 @@ def run_game():
     mine_counter.geometry = Rect(boardview.geometry.right - METER_WIDTH, boardview.geometry.bottom + METER_BOARD_MARGIN, METER_WIDTH, METER_HEIGHT)
     gameview.children.append(mine_counter)
 
-    event_listeners.append(boardview)
-
     while True:
         time_passed = clock.tick(30)
 
@@ -84,23 +79,37 @@ def run_game():
             if event.type == pygame.QUIT:
                 exit_game()
             elif event.type is pygame.MOUSEMOTION:
-                event_listeners.mouse_move_event()
+                handle_event(root, "mouse_move")
             elif event.type is pygame.MOUSEBUTTONDOWN:
-                event_listeners.mouse_button_down_event(button=event.button)
+                handle_event(root, "mouse_button_down", button=event.button)
             elif event.type is pygame.MOUSEBUTTONUP:
-                event_listeners.mouse_button_up_event(button=event.button)
+                handle_event(root, "mouse_button_up", button=event.button)
 
         paint(screen, root)
         pygame.display.flip()
 
 def paint(screen, target):
-    def does_nothing(*args):
-        pass
-    getattr(target, "paint", does_nothing)(screen)
-    children = getattr(target, "children", [])
+    get_method(target, "paint")(screen)
     # paint children recursively
-    for child in children:
+    for child in get_children(target):
         paint(screen, child)
+
+def get_method(target, name):
+    def does_nothing(*args, **kwargs):
+        pass
+    return getattr(target, name, does_nothing)
+
+def get_children(target):
+    return getattr(target, "children", [])
+
+def handle_event(target, name, *args, **kwargs):
+    # call children's event handlers, leaving immediately if the handler tells
+    # that it has handled the event
+    for child in get_children(target):
+        if handle_event(child, name, *args, **kwargs) is True:
+            return True
+    # call 'target's' event handler method
+    return get_method(target, name + "_event")(*args, **kwargs)
 
 def exit_game():
     sys.exit()
