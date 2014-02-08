@@ -7,7 +7,6 @@ from gui.meterview import MeterView
 from utils import CallableWrapper
 
 event_listeners = CallableWrapper()
-paintables = CallableWrapper()
 
 class Background(object):
     def __init__(self, tile_img_file, field_rect):
@@ -35,6 +34,11 @@ class Background(object):
         pygame.draw.rect(screen, (0, 0, 0), boundary_rect)
         pygame.draw.rect(screen, field_color, self.field_rect)
 
+class Root(object):
+    children = []
+
+class GameView(object):
+    children = []
 
 def run_game():
     # Game parameters
@@ -50,24 +54,28 @@ def run_game():
                 (SCREEN_WIDTH, SCREEN_HEIGHT), 0, 32)
     clock = pygame.time.Clock()
 
+    root = Root()
+    gameview = GameView()
+    root.children.append(gameview)
+
     bg = Background(BG_TILE_IMG, FIELD_RECT)
+    gameview.children.append(bg)
 
     boardview = BoardView(TileRenderer())
     boardview.geometry = Rect(50, 50, 300, 300)
     boardview.rows = 16
     boardview.cols = 16
+    gameview.children.append(boardview)
 
     time_counter = MeterView("Time")
     time_counter.geometry = Rect(boardview.geometry.left, boardview.geometry.bottom + METER_BOARD_MARGIN, METER_WIDTH, METER_HEIGHT)
+    gameview.children.append(time_counter)
 
     mine_counter = MeterView("Mines")
     mine_counter.geometry = Rect(boardview.geometry.right - METER_WIDTH, boardview.geometry.bottom + METER_BOARD_MARGIN, METER_WIDTH, METER_HEIGHT)
+    gameview.children.append(mine_counter)
 
     event_listeners.append(boardview)
-    paintables.append(bg)
-    paintables.append(boardview)
-    paintables.append(time_counter)
-    paintables.append(mine_counter)
 
     while True:
         time_passed = clock.tick(30)
@@ -82,8 +90,17 @@ def run_game():
             elif event.type is pygame.MOUSEBUTTONUP:
                 event_listeners.mouse_button_up_event(button=event.button)
 
-        paintables.paint(screen)
+        paint(screen, root)
         pygame.display.flip()
+
+def paint(screen, target):
+    def does_nothing(*args):
+        pass
+    getattr(target, "paint", does_nothing)(screen)
+    children = getattr(target, "children", [])
+    # paint children recursively
+    for child in children:
+        paint(screen, child)
 
 def exit_game():
     sys.exit()
