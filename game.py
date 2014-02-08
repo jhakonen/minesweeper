@@ -5,7 +5,12 @@ from gui.boardview import BoardView
 from gui.tile import TileRenderer
 from gui.meterview import MeterView
 
-class Background(object):
+class Root(object):
+    children = []
+
+class GameView(object):
+    children = []
+
     def __init__(self, tile_img_file, field_rect):
         self.tile_img_file = tile_img_file
         self.field_rect = field_rect
@@ -31,11 +36,22 @@ class Background(object):
         pygame.draw.rect(screen, (0, 0, 0), boundary_rect)
         pygame.draw.rect(screen, field_color, self.field_rect)
 
-class Root(object):
-    children = []
+class MenuView(object):
+    def paint(self, screen):
+        # darken the game view
+        bg = pygame.Surface(screen.get_size())
+        bg.set_alpha(225)
+        bg.fill((0, 0, 0))
+        screen.blit(bg, (0, 0))
 
-class GameView(object):
-    children = []
+    def mouse_move_event(self):
+        return True
+
+    def mouse_button_down_event(self, button):
+        return True
+
+    def mouse_button_up_event(self, button):
+        return True
 
 def run_game():
     # Game parameters
@@ -52,11 +68,13 @@ def run_game():
     clock = pygame.time.Clock()
 
     root = Root()
-    gameview = GameView()
+
+    gameview = GameView(BG_TILE_IMG, FIELD_RECT)
     root.children.append(gameview)
 
-    bg = Background(BG_TILE_IMG, FIELD_RECT)
-    gameview.children.append(bg)
+    menuview = MenuView()
+    menuview.visible = False
+    root.children.append(menuview)
 
     boardview = BoardView(TileRenderer())
     boardview.geometry = Rect(50, 50, 300, 300)
@@ -84,15 +102,22 @@ def run_game():
                 handle_event(root, "mouse_button_down", button=event.button)
             elif event.type is pygame.MOUSEBUTTONUP:
                 handle_event(root, "mouse_button_up", button=event.button)
+            elif event.type is pygame.KEYDOWN:
+                if event.key is pygame.K_ESCAPE:
+                    menuview.visible = not is_visible(menuview)
 
         paint(screen, root)
         pygame.display.flip()
 
 def paint(screen, target):
-    get_method(target, "paint")(screen)
-    # paint children recursively
-    for child in get_children(target):
-        paint(screen, child)
+    if is_visible(target):
+        get_method(target, "paint")(screen)
+        # paint children recursively
+        for child in get_children(target):
+            paint(screen, child)
+
+def is_visible(target):
+    return getattr(target, "visible", True)
 
 def get_method(target, name):
     def does_nothing(*args, **kwargs):
@@ -103,13 +128,14 @@ def get_children(target):
     return getattr(target, "children", [])
 
 def handle_event(target, name, *args, **kwargs):
-    # call children's event handlers, leaving immediately if the handler tells
-    # that it has handled the event
-    for child in get_children(target):
-        if handle_event(child, name, *args, **kwargs) is True:
-            return True
-    # call 'target's' event handler method
-    return get_method(target, name + "_event")(*args, **kwargs)
+    if is_visible(target):
+        # call children's event handlers, leaving immediately if the handler tells
+        # that it has handled the event
+        for child in reversed(get_children(target)):
+            if handle_event(child, name, *args, **kwargs) is True:
+                return True
+        # call 'target's' event handler method
+        return get_method(target, name + "_event")(*args, **kwargs)
 
 def exit_game():
     sys.exit()

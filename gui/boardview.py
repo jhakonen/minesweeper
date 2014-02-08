@@ -11,6 +11,7 @@ class BoardView(object):
 	tile_renderer = None
 	pressed_tile_left = None
 	pressed_tile_right = None
+	mouse_pos = (0, 0)
 
 	def __init__(self, tile_renderer):
 		self.tile_renderer = tile_renderer
@@ -33,7 +34,7 @@ class BoardView(object):
 		self.top = self.geometry.top + (self.geometry.height - self.rows * self.tile_size) / 2
 
 	def paint(self, screen):
-		mouse_over_tile = self.get_tile_at_pos(pygame.mouse.get_pos())
+		mouse_over_tile = self.get_tile_at_pos(self.mouse_pos)
 
 		for col in range(0, self.cols):
 			x = self.left + col * self.tile_size
@@ -44,6 +45,9 @@ class BoardView(object):
 				mouseover = mouse_over_tile and mouse_over_tile == (col, row)
 				pressed = self.pressed_tile_left and self.pressed_tile_left == (col, row)
 				self.tile_renderer.paint(screen=screen, mouseover=mouseover, pressed=pressed)
+
+	def mouse_move_event(self):
+		self.mouse_pos = pygame.mouse.get_pos()
 
 	def mouse_button_down_event(self, button):
 		if button == MouseButton.LEFT:
