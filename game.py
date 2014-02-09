@@ -4,6 +4,7 @@ from pygame import Rect
 from gui.boardview import BoardView
 from gui.tile import TileRenderer
 from gui.meterview import MeterView
+from definitions import MouseButton
 
 class Root(object):
     children = []
@@ -37,12 +38,59 @@ class GameView(object):
         pygame.draw.rect(screen, field_color, self.field_rect)
 
 class MenuView(object):
+    transparency = 225
+    title = None
+    title_item_margin = 30
+    item_margin = 20
+    children = []
+
+    _items = []
+
+    def __init__(self):
+        self.title_font = pygame.font.SysFont("monospace", 18, bold=True)
+
+    def __setattr__(self, name, value):
+        super(MenuView, self).__setattr__(name, value)
+        if name is "title":
+            self.children.append(value)
+
+    def add_menu_item(self, item):
+        self._items.append(item)
+        self.children.append(item)
+
     def paint(self, screen):
+        self.update_rects(screen.get_size())
         # darken the game view
         bg = pygame.Surface(screen.get_size())
-        bg.set_alpha(225)
+        bg.set_alpha(self.transparency)
         bg.fill((0, 0, 0))
         screen.blit(bg, (0, 0))
+
+    def update_rects(self, screen_size):
+        start_h = self.get_start_height(screen_size[1])
+        screen_rect = Rect((0, 0), screen_size)
+
+        s = self.title.get_preferred_size()
+        self.title.geometry = Rect((0, start_h), s)
+        self.title.geometry.centerx = screen_size[0] / 2
+        start_h += self.title.geometry.height + self.title_item_margin
+
+        for item in self._items:
+            s = item.get_preferred_size()
+            item.geometry = Rect((0, start_h), s)
+            item.geometry.centerx = screen_size[0] / 2
+            start_h += item.geometry.height + self.item_margin
+
+    def get_start_height(self, screen_height):
+        title_size = self.title.get_preferred_size()
+        h = title_size[1]
+        h += self.title_item_margin
+
+        for item in self._items:
+            s = item.get_preferred_size()
+            h += s[1]
+        h += max(len(self._items) - 1, 0) * self.item_margin
+        return (screen_height - h) / 2
 
     def mouse_move_event(self):
         return True
@@ -52,6 +100,71 @@ class MenuView(object):
 
     def mouse_button_up_event(self, button):
         return True
+
+class Button(object):
+    geometry = Rect(0, 0, 0, 0)
+    children = []
+
+    _pressed = False
+
+    def __init__(self, label):
+        self._label = label
+        self.children.append(label)
+
+    def get_preferred_size(self):
+        return self._label.get_preferred_size()
+
+    def paint(self, screen):
+        pygame.draw.rect(screen, (0, 0, 0), self.geometry)
+        inner_rect = self.geometry.copy()
+        inner_rect.inflate_ip(-2, -2)
+
+        inner_color = (255, 255, 255)
+        if self.is_mouse_over() and self._pressed:
+            inner_color = (50, 50, 50)
+        pygame.draw.rect(screen, inner_color, inner_rect)
+
+        self._label.geometry = self.geometry.copy()
+
+    def is_mouse_over(self):
+        return self.geometry.collidepoint(pygame.mouse.get_pos())
+
+    def mouse_button_down_event(self, button):
+        self._pressed = button is MouseButton.LEFT and self.is_mouse_over()
+        return self._pressed
+
+    def mouse_button_up_event(self, button):
+        handled = False
+        if button is MouseButton.LEFT:
+            if self._pressed and self.is_mouse_over():
+                print "button '" + self._label.text + "' clicked"
+                handled = True
+            self._pressed = False
+        return handled
+
+class TextLabel(object):
+    geometry = Rect(0, 0, 0, 0)
+    color = (0, 0, 0)
+    font_name = ""
+    font_size = 12
+    bold = False
+    text = ""
+
+    def __init__(self, text):
+        self.text = text
+
+    def get_preferred_size(self):
+        return self.get_text_image().get_size()
+
+    def get_text_image(self):
+        font = pygame.font.SysFont(self.font_name, self.font_size, self.bold)
+        return font.render(self.text, 1, self.color)
+
+    def paint(self, screen):
+        text = self.get_text_image()
+        text_rect = text.get_rect()
+        text_rect.center = self.geometry.center
+        screen.blit(text, text_rect)
 
 def run_game():
     # Game parameters
@@ -74,6 +187,12 @@ def run_game():
 
     menuview = MenuView()
     menuview.visible = False
+    menuview.title = create_menu_title("Minesweeper")
+    menuview.add_menu_item(create_menu_item("Create New Game"))
+    menuview.add_menu_item(create_menu_item("Change Difficulty: Easy"))
+    menuview.add_menu_item(create_menu_item("Change Difficulty: Normal"))
+    menuview.add_menu_item(create_menu_item("Change Difficulty: Hard"))
+    menuview.add_menu_item(create_menu_item("Exit Game"))
     root.children.append(menuview)
 
     boardview = BoardView(TileRenderer())
@@ -108,6 +227,23 @@ def run_game():
 
         paint(screen, root)
         pygame.display.flip()
+
+def create_menu_title(text):
+    label = TextLabel(text)
+    label.color = (255, 255, 255)
+    label.font_size = 18
+    label.font_name = "monospace"
+    label.bold = True
+    return label
+
+def create_menu_item(text):
+    label = TextLabel(text)
+    label.color = (0, 0, 0)
+    label.font_size = 16
+    label.font_name = "monospace"
+    label.bold = True
+    button = Button(label)
+    return button
 
 def paint(screen, target):
     if is_visible(target):
